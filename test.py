@@ -3,16 +3,14 @@ import secrets
 import string
 from datetime import datetime
 
-# ---------- Connect to MySQL ----------
 conn = mysql.connector.connect(
     host='localhost',
-    user='root',             # your MySQL username
-    password='rahim2005', # your MySQL password
-    database='stage'   # your MySQL database
+    user='root',
+    password='2004',
+    database='stage'
 )
 cursor = conn.cursor()
 
-# ---------- Key Generators ----------
 def generate_license_key():
     characters = string.ascii_letters + string.digits
     blocks = [''.join(secrets.choice(characters) for _ in range(4)) for _ in range(3)]
@@ -26,8 +24,7 @@ def generate_api_key(length=32):
     characters = string.ascii_letters + string.digits
     return 'api_' + ''.join(secrets.choice(characters) for _ in range(length))
 
-# ---------- Store Key ----------
-def store_key(key_value, key_type, customer_id, status, expires_at):
+def store_key(key_value, key_type, customer_id, status, expires_at, use_rate=0):
     try:
         current_time = datetime.now()
 
@@ -40,9 +37,9 @@ def store_key(key_value, key_type, customer_id, status, expires_at):
 
         # Insert into database
         cursor.execute('''
-            INSERT INTO `keys` (key_value, type, customer_id, status, expires_at)
-            VALUES (%s, %s, %s, %s, %s)
-        ''', (key_value, key_type, customer_id, status, expires_at))
+            INSERT INTO `keys` (key_value, type, customer_id, status, expires_at, use_rate)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''', (key_value, key_type, customer_id, status, expires_at, use_rate))
         conn.commit()
         print(f"\n✅ Key stored successfully: {key_value}")
 
@@ -85,8 +82,8 @@ if __name__ == "__main__":
     else:
         expires_at = None
 
-    # Store the generated key
-    store_key(key, key_type, customer_id, status, expires_at)
+    # Store the generated key with use_rate initialized to 0
+    store_key(key, key_type, customer_id, status, expires_at, use_rate=0)
 
 key_to_check = input("Enter the key to validate: ")
 
@@ -114,3 +111,4 @@ except mysql.connector.Error as err:
 
     cursor.close()
     conn.close()
+    
