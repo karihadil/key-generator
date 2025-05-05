@@ -14,16 +14,16 @@ cursor = conn.cursor()
 
 # ---------- Key Generators ----------
 def generate_license_key():
-    characters = string.ascii_letters + string.digits + string.punctuation
+    characters = string.ascii_letters + string.digits
     blocks = [''.join(secrets.choice(characters) for _ in range(4)) for _ in range(3)]
     return '-'.join(blocks)
 
 def generate_public_key(length=32):
-    characters = string.ascii_letters + string.digits + string.punctuation
+    characters = string.ascii_letters + string.digits
     return 'pk_' + ''.join(secrets.choice(characters) for _ in range(length))
 
 def generate_api_key(length=32):
-    characters = string.ascii_letters + string.digits + string.punctuation
+    characters = string.ascii_letters + string.digits
     return 'api_' + ''.join(secrets.choice(characters) for _ in range(length))
 
 # ---------- Store Key ----------
@@ -87,6 +87,30 @@ if __name__ == "__main__":
 
     # Store the generated key
     store_key(key, key_type, customer_id, status, expires_at)
+
+key_to_check = input("Enter the key to validate: ")
+
+try:
+    query = '''
+        SELECT * FROM `keys`
+        WHERE key_value = %s
+        AND status = 'active'
+        AND (expires_at IS NULL OR expires_at > %s)
+    '''
+    cursor.execute(query, (key_to_check, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+    result = cursor.fetchone()
+
+    if result:
+        print("\n✅ The key is VALID and ACTIVE.")
+        print(f"ID: {result[0]}")
+        print(f"Type: {result[2]}")
+        print(f"Customer ID: {result[3]}")
+        print(f"Expires At: {result[6]}")
+    else:
+        print("\n❌ The key is INVALID, EXPIRED, or REVOKED.")
+
+except mysql.connector.Error as err:
+    print(f"⚠ Database Error: {err}")
 
     cursor.close()
     conn.close()
