@@ -1,8 +1,15 @@
+<<<<<<< HEAD:api_check.py
 import mysql.connector
 import secrets
 import string
 from datetime import datetime
 
+=======
+from datetime import datetime
+import mysql.connector
+import secrets
+import string
+>>>>>>> de685f6901121f03ffe95ae097cc62ffef0185f4:bunbun/api_check.py
 def verify_api_key(input_key, customer_id):
     try:
         current_time = datetime.now()
