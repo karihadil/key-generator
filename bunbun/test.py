@@ -3,50 +3,40 @@ import secrets
 import string
 from datetime import datetime
 
+# ---------- Connect to MySQL ----------
 conn = mysql.connector.connect(
     host='localhost',
-    user='root',
-    password='2004',
-    database='stage'
+    user='root',             # your MySQL username
+    password='rahim2005', # your MySQL password
+    database='stage'   # your MySQL database
 )
 cursor = conn.cursor()
 
+# ---------- Key Generators ----------
 def generate_license_key():
-    characters = string.ascii_letters + string.digits
+    characters = string.ascii_letters + string.digits + string.punctuation
     blocks = [''.join(secrets.choice(characters) for _ in range(4)) for _ in range(3)]
     return '-'.join(blocks)
 
 def generate_public_key(length=32):
-    characters = string.ascii_letters + string.digits
+    characters = string.ascii_letters + string.digits + string.punctuation
     return 'pk_' + ''.join(secrets.choice(characters) for _ in range(length))
 
 def generate_api_key(length=32):
-    characters = string.ascii_letters + string.digits
+    characters = string.ascii_letters + string.digits + string.punctuation
     return 'api_' + ''.join(secrets.choice(characters) for _ in range(length))
 
-def store_key(key_value, key_type, customer_id, status, expires_at, use_rate=0):
+# ---------- Store Key ----------
+def store_key(key_value, key_type, customer_id, status, expires_at):
     try:
-        current_time = datetime.now()
-
-        # Check if expires_at is valid
-        if expires_at is not None:
-            expires_at_dt = datetime.strptime(expires_at, '%Y-%m-%d %H:%M:%S')
-            if expires_at_dt <= current_time:
-                print("⚠ Error: Expiration date must be in the future compared to creation time.")
-                return
-
-        # Insert into database
         cursor.execute('''
-            INSERT INTO `keys` (key_value, type, customer_id, status, expires_at, use_rate)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        ''', (key_value, key_type, customer_id, status, expires_at, use_rate))
+            INSERT INTO `keys` (key_value, type, customer_id, status, expires_at)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (key_value, key_type, customer_id, status, expires_at))
         conn.commit()
         print(f"\n✅ Key stored successfully: {key_value}")
-
     except mysql.connector.Error as err:
-        print(f"⚠ Database Error: {err}")
-    except ValueError as ve:
-        print(f"⚠ Date Parsing Error: {ve}")
+        print(f"⚠ Error: {err}")
 
 # ---------- Main Workflow ----------
 if __name__ == "__main__":
@@ -82,33 +72,34 @@ if __name__ == "__main__":
     else:
         expires_at = None
 
-    # Store the generated key with use_rate initialized to 0
-    store_key(key, key_type, customer_id, status, expires_at, use_rate=0)
-
-key_to_check = input("Enter the key to validate: ")
+    # Store the generated key
+    store_key(key, key_type, customer_id, status, expires_at)
+    #///////////////////////////////////////////////////////////////////////licence
+    key_to_check = input("Enter the key to check expiration: ")
 
 try:
     query = '''
-        SELECT * FROM `keys`
-        WHERE key_value = %s
-        AND status = 'active'
-        AND (expires_at IS NULL OR expires_at > %s)
+        SELECT expires_at FROM `keys` WHERE key_value = %s
     '''
-    cursor.execute(query, (key_to_check, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+    cursor.execute(query, (key_to_check,))
     result = cursor.fetchone()
 
-    if result:
-        print("\n✅ The key is VALID and ACTIVE.")
-        print(f"ID: {result[0]}")
-        print(f"Type: {result[2]}")
-        print(f"Customer ID: {result[3]}")
-        print(f"Expires At: {result[6]}")
+    if result is None:
+        print("\n❌ No such key found in the database.")
     else:
-        print("\n❌ The key is INVALID, EXPIRED, or REVOKED.")
+        expires_at = result[0]
+        if expires_at is None:
+            print("\n✅ This key has no expiration (it is valid indefinitely).")
+        else:
+            expires_at_dt = expires_at  # Already a datetime object from MySQL
+            if expires_at_dt > datetime.now():
+                print(f"\n✅ The key is NOT expired (expires on {expires_at_dt}).")
+            else:
+                print(f"\n❌ The key is EXPIRED (expired on {expires_at_dt}).")
 
 except mysql.connector.Error as err:
     print(f"⚠ Database Error: {err}")
-
+    
     cursor.close()
     conn.close()
-    
+#///////////////////////////////////////////////////////////////////api

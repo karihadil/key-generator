@@ -1,9 +1,0 @@
-CREATE DATABASE KeyGeneratorDB;
-
-USE KeyGeneratorDB;
-
-CREATE TABLE Users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    user_key VARCHAR(255) NOT NULL
-);
