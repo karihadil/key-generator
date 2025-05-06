@@ -1,3 +1,8 @@
+import mysql.connector
+import secrets
+import string
+from datetime import datetime
+
 def verify_api_key(input_key, customer_id):
     try:
         current_time = datetime.now()
