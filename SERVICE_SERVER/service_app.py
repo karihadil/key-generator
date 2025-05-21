@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 import requests
 from fastapi.openapi.utils import get_openapi
 
-KEY_SERVER_URL = "http://127.0.0.1:8000"
+KEY_SERVER_URL = "http://127.0.0.1:10000"
 
 app = FastAPI(title="Service Server", docs_url="/docs")
 

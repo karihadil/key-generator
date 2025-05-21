@@ -3,18 +3,14 @@ from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = "postgresql+asyncpg://key_user:2004@127.0.0.1/key_management"
 
-
-# Create the engine
 engine = create_async_engine(DATABASE_URL, echo=True)
 
-# Create a session factory
 AsyncSessionLocal = sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False
 )
 
-# Dependency for FastAPI
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
