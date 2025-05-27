@@ -23,5 +23,5 @@ class APIKey(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     revoked_at = Column(DateTime, nullable=True)
     services = Column(ARRAY(String), default=[])
-
+    expires_at = Column(DateTime, nullable=True)
     parent = relationship('APIKey', remote_side=[id], backref='children')
